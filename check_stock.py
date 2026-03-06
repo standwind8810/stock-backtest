@@ -1,27 +1,40 @@
 import yfinance as yf
+import matplotlib.pyplot as plt
 
-# ターゲットを修正：285A: キオクシア, 6857: アドバンテスト, 8035: 東京エレクトロン
-targets = ["285A.T", "6857.T", "8035.T"]
+# ターゲット：キオクシア
+ticker = "285A.T"
+stock = yf.Ticker(ticker)
 
-print("=== 半導体関連 銘柄一括チェック開始 ===")
+# 過去1ヶ月分のデータを取得
+data = stock.history(period="1mo")
 
-for ticker in targets:
-    stock = yf.Ticker(ticker)
-    data = stock.history(period='2d') # 今日と昨日のデータを取得
-    
-    # データが2日分以上（今日と昨日）あるか確認
-    if not data.empty and len(data) >= 2:
-        latest = data['Close'].iloc[-1]
-        prev = data['Close'].iloc[-2]
-        diff = latest - prev
-        
-        # 値上がりの場合は▲、それ以外は▼を表示
-        status = "▲" if diff > 0 else "▼"
-        
-        # 見やすくフォーマットして表示
-        # {latest:8.1f} は「合計8桁、小数点以下1桁」という意味です
-        print(f"[{ticker}] {latest:8.1f}円 ({status} {diff:+6.1f}円)")
-    else:
-        print(f"[{ticker}] データの取得に失敗しました。市場が閉まっているか上場直後の可能性があります。")
+# 【新機能】5日間の移動平均（Moving Average）を計算
+# rolling(window=5) で5日分をまとめ、mean() でその平均を出します
+data['MA5'] = data['Close'].rolling(window=5).mean()
 
-print("======================================")
+# 最新のデータを取り出す
+latest_close = data['Close'].iloc[-1]
+latest_ma5 = data['MA5'].iloc[-1]
+
+print(f"=== {ticker} AI判定レポート ===")
+print(f"最新の終値: {latest_close:.1f}円")
+print(f"5日移動平均: {latest_ma5:.1f}円")
+
+# --- AIの判断ロジック ---
+if latest_close > latest_ma5:
+    diff = latest_close - latest_ma5
+    print(f"【判定】買いシグナル：平均より {diff:.1f}円 高いです。上昇トレンド！")
+else:
+    diff = latest_ma5 - latest_close
+    print(f"【判定】待機：平均より {diff:.1f}円 低いです。下落リスクがあります。")
+
+# グラフにも移動平均線を追加
+plt.figure(figsize=(10, 5))
+plt.plot(data.index, data['Close'], label="Close Price", color="blue")
+plt.plot(data.index, data['MA5'], label="5-day MA", color="orange", linestyle="--")
+
+plt.title(f"{ticker} Analysis")
+plt.legend()
+plt.grid(True)
+plt.savefig("stock_analysis.png")
+print("分析グラフを stock_analysis.png として保存しました。")
