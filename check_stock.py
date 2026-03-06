@@ -5,36 +5,41 @@ import matplotlib.pyplot as plt
 ticker = "285A.T"
 stock = yf.Ticker(ticker)
 
-# 過去1ヶ月分のデータを取得
-data = stock.history(period="1mo")
+# 25日平均を計算するために、少し長めに3ヶ月分（3mo）のデータを取ります
+data = stock.history(period="3mo")
 
-# 【新機能】5日間の移動平均（Moving Average）を計算
-# rolling(window=5) で5日分をまとめ、mean() でその平均を出します
-data['MA5'] = data['Close'].rolling(window=5).mean()
+# 【学習ポイント】2本の移動平均線を作る
+data['MA5'] = data['Close'].rolling(window=5).mean()   # 短期線
+data['MA25'] = data['Close'].rolling(window=25).mean() # 長期線
 
-# 最新のデータを取り出す
-latest_close = data['Close'].iloc[-1]
-latest_ma5 = data['MA5'].iloc[-1]
+# 最新のデータ（今日）と1日前のデータを取得して「クロス」を判定する
+today_ma5 = data['MA5'].iloc[-1]
+today_ma25 = data['MA25'].iloc[-1]
+yesterday_ma5 = data['MA5'].iloc[-2]
+yesterday_ma25 = data['MA25'].iloc[-2]
 
-print(f"=== {ticker} AI判定レポート ===")
-print(f"最新の終値: {latest_close:.1f}円")
-print(f"5日移動平均: {latest_ma5:.1f}円")
+print(f"=== {ticker} 精密判定レポート ===")
+print(f"今日: 5日線={today_ma5:.1f} / 25日線={today_ma25:.1f}")
 
-# --- AIの判断ロジック ---
-if latest_close > latest_ma5:
-    diff = latest_close - latest_ma5
-    print(f"【判定】買いシグナル：平均より {diff:.1f}円 高いです。上昇トレンド！")
+# --- ゴールデンクロスの判定ロジック ---
+# 「昨日は5日線の方が下だったのに、今日は5日線の方が上になった」という条件
+if yesterday_ma5 <= yesterday_ma25 and today_ma5 > today_ma25:
+    print("【★激アツ★】ゴールデンクロス発生！強力な買いシグナルです。")
+elif today_ma5 > today_ma25:
+    print("【判定】上昇トレンド継続中。")
+elif yesterday_ma5 >= yesterday_ma25 and today_ma5 < today_ma25:
+    print("【注意】デッドクロス発生。下落のサイン（売り）です。")
 else:
-    diff = latest_ma5 - latest_close
-    print(f"【判定】待機：平均より {diff:.1f}円 低いです。下落リスクがあります。")
+    print("【判定】様子見、または下落トレンドです。")
 
-# グラフにも移動平均線を追加
-plt.figure(figsize=(10, 5))
-plt.plot(data.index, data['Close'], label="Close Price", color="blue")
-plt.plot(data.index, data['MA5'], label="5-day MA", color="orange", linestyle="--")
+# グラフに2本の線を描画
+plt.figure(figsize=(12, 6))
+plt.plot(data.index, data['Close'], label="Close", color="gray", alpha=0.5)
+plt.plot(data.index, data['MA5'], label="5-day MA (Short)", color="orange")
+plt.plot(data.index, data['MA25'], label="25-day MA (Long)", color="red")
 
-plt.title(f"{ticker} Analysis")
+plt.title(f"{ticker} Golden Cross Analysis")
 plt.legend()
 plt.grid(True)
-plt.savefig("stock_analysis.png")
-print("分析グラフを stock_analysis.png として保存しました。")
+plt.savefig("golden_cross.png")
+print("分析グラフを golden_cross.png として保存しました。")
