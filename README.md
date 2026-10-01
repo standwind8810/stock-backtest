@@ -83,14 +83,15 @@
 | 3つのスクリプトに同じ処理が重複していた | 指標・戦略・バックテストをモジュールに分けて共通化 |
 | メンテナンスが滞っている pandas_ta に依存していた | RSI とボリンジャーバンドを自前で実装 |
 | README・依存ライブラリ一覧・テストがなかった | すべて追加 |
+| リポジトリ名が `stock-ai` だったが、AI や機械学習は使っていなかった | 中身に合わせて `stock-backtest` に改名 |
 
 ## 使い方
 
 Python 3.11 以上が必要です。
 
 ```bash
-git clone https://github.com/standwind8810/stock-ai.git
-cd stock-ai
+git clone https://github.com/standwind8810/stock-backtest.git
+cd stock-backtest
 python -m venv .venv
 # Windows: .venv\Scripts\activate   macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
