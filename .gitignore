@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# 実行結果(README用の画像は docs/images に置く)
+output/
+
+# OS / エディタ
+.DS_Store
+Thumbs.db
+.vscode/
